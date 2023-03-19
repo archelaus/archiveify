@@ -58,13 +58,14 @@ TOTAL="$(jq -r .tracks.total <<< "$DETAILS")"
 mkdir -p "${CACHE_DIR}/${PLAYLIST}"
 
 : > "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
+set -x
 n=$(( TOTAL / 100 ))
 for i in $(seq 0 100 ${n}00); do
   curl -sS -X "GET" "https://api.spotify.com/v1/playlists/$ID/tracks?offset=$i&limit=100" \
     -H "Accept: application/json" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $ACCESS_TOKEN" |
-    jq -r '.items[].track |  "\(.album.artists[].name) - \(.name) | \(.external_ids.isrc)"' \
+    jq -r '.items[].track |  "\([.album.artists[].name] | join(", ")) - \(.name) | \(.external_ids.isrc)"' \
       >> "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
 done
 
