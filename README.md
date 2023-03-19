@@ -29,7 +29,7 @@ The script requires the following dependencies:
 ## Usage
 
 The script requires only one argument:
-* The Spotify link to the playlist (in the format `spotify:playlist:<id>` or `https://open.spotify.com/playlist/<id>`)
+* Spotify link to the playlist (in the format `spotify:playlist:<id>` or `https://open.spotify.com/playlist/<id>`)
 
 To run the script, navigate to the directory where it is saved and enter the following command in your terminal:
 
