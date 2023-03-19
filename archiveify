@@ -58,7 +58,6 @@ TOTAL="$(jq -r .tracks.total <<< "$DETAILS")"
 mkdir -p "${CACHE_DIR}/${PLAYLIST}"
 
 : > "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
-set -x
 n=$(( TOTAL / 100 ))
 for i in $(seq 0 100 ${n}00); do
   curl -sS -X "GET" "https://api.spotify.com/v1/playlists/$ID/tracks?offset=$i&limit=100" \
