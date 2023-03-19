@@ -25,6 +25,10 @@ checkDeps() {
   done
 }
 
+mkcd() {
+  mkdir -p "$1" && cd "$1"
+}
+
 silent() {
   "$@" >/dev/null 2>&1
 }
@@ -55,9 +59,9 @@ DETAILS="$(curl -sS "https://api.spotify.com/v1/playlists/$ID?fields=name,tracks
 PLAYLIST="$(jq -r .name <<< "$DETAILS")"
 TOTAL="$(jq -r .tracks.total <<< "$DETAILS")"
 
-mkdir -p "${CACHE_DIR}/${PLAYLIST}"
+mkcd "${CACHE_DIR}/${PLAYLIST}"
 
-: > "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
+: > tracks.txt
 n=$(( TOTAL / 100 ))
 for i in $(seq 0 100 ${n}00); do
   curl -sS -X "GET" "https://api.spotify.com/v1/playlists/$ID/tracks?offset=$i&limit=100" \
@@ -65,7 +69,7 @@ for i in $(seq 0 100 ${n}00); do
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $ACCESS_TOKEN" |
     jq -r '.items[].track |  "\([.album.artists[].name] | join(", ")) - \(.name) | \(.external_ids.isrc)"' \
-      >> "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
+      >> tracks.txt
 done
 
 while read -r line; do
@@ -80,18 +84,17 @@ while read -r line; do
     # artist="$(jq -r .tracks.items[0].album.artist.name <<< "$tracks")"
     title="$(jq -r .tracks.items[0].title <<< "$tracks")"
     filename="${artist} - ${title}"
-    if [[ -f "${CACHE_DIR}/${PLAYLIST}/${filename}.flac" ]]; then
-      silent flac -t "${CACHE_DIR}/${PLAYLIST}/${filename}.flac" && {
+    if [[ -f ${filename}.flac ]]; then
+      silent flac -t "${filename}.flac" && {
         printf 'Skipping "%s", already exists\n' "$filename"
         continue
       }
     fi
     printf 'Downloading "%s"...\n' "$filename"
     curl -# https://slavart-api.gamesdrive.net/api/download/track\?id="$(jq -r .tracks.items[0].id <<< "$tracks")" \
-      -o "${CACHE_DIR}/${PLAYLIST}/${filename}.flac"
+      -o "${filename}.flac"
   fi
-done < "${CACHE_DIR}/${PLAYLIST}/tracks.txt"
+done < tracks.txt
 
-mkdir ~/"$PLAYLIST"
-
-mv "${CACHE_DIR}/${PLAYLIST}"/*.flac ~/"$PLAYLIST"
+mkdir ~/"$PLAYLIST" &&
+  mv ./*.flac ~/"$PLAYLIST"
